@@ -1,31 +1,35 @@
 <template>
-    <div>
-        <h2>Make a Team</h2>
-        <div class="form" :teamVictory = "getVictory">
-            <p>Team Name:</p><input type="text" v-model="teamName">
-            <br>
-            <br>
-            <p>Team Color:</p><swatches-picker v-model="color"/>
-            <p>Team Specialty:</p><input type="text" v-model="teamSpecialty">
-            <br>
-            <br>
-            <PokemonList teamMode="createTeam" @addToTeam="pokemons.push($event._id)"/>
-            <br>
-            <br>
-            <button @click="addTeam">Create Team</button>
-        </div>
+    <div v-if="user">
+      <h2>Make a Team</h2>
+      <div class="form">
+        <p>Team Name:</p><input type="text" v-model="teamName">
+        <br>
+        <br>
+        <p>Team Color:</p><swatches-picker v-model="color"/>
+        <p>Team Specialty:</p><input type="text" v-model="teamSpecialty">
+        <br>
+        <br>
+        <PokemonList teamMode="createTeam" @addToTeam="pokemons.push($event._id)"/>
+        <br>
+        <br>
+        <button @click="addTeam">Create Team</button>
+      </div>
     </div>
+
+    <Login v-else />
 </template>
 
 <script>
 import PokemonList from "../components/PokemonList.vue"
+import Login from "../components/Login.vue"
 import axios from 'axios';
 import { Swatches } from 'vue-color'
 export default {
   name: 'Home',
   components: {
     'swatches-picker': Swatches,
-    PokemonList
+    PokemonList,
+    Login
   },
   data() {
     return {
@@ -47,10 +51,19 @@ export default {
       show: 'all',
     }
   },
-  created() {
+  async created() {
+    try {
+      let response = await axios.get('/api/users');
+      this.$root.$data.user = response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
     this.getTeams();
   },
   computed: {
+    user() {
+      return this.$root.$data.user;
+    },
     madePokemons() {
       return this.pokemons;
     },
@@ -67,6 +80,7 @@ export default {
           specialty: this.teamSpecialty,
           victory: this.teamVictory,
           pokemons: this.pokemons,
+          user: this.$root.$data.user._id,
         });
         await this.getTeams();
       } catch (error) {

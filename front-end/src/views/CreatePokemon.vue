@@ -1,5 +1,5 @@
 <template>
-<div>
+<div v-if="user">
   <h2>Make a Pokemon</h2>
   <div class="form">
         <p>Pokemon ID:</p><input type="text" v-model="pokemonID">
@@ -8,7 +8,27 @@
         <p>Pokemon Name:</p><input type="text" v-model="pokemonName">
         <br>
         <br>
-        <p>Pokemon Type:</p><input type="text" v-model="pokemonType">
+        <p>Pokemon Type:</p><select v-model="pokemonType">
+          <option value="Grass">Grass</option>
+          <option value="Fire">Fire</option>
+          <option value="Water">Water</option>
+          <option value="Electric">Electric</option>
+          <option value="Ice">Ice</option>
+          <option value="Fighting">Fighting</option>
+          <option value="Poison">Poison</option>
+          <option value="Ground">Ground</option>
+          <option value="Psychic">Psychic</option>
+          <option value="Bug">Bug</option>
+          <option value="Rock">Rock</option>
+          <option value="Ghost">Ghost</option>
+          <option value="Flying">Flying</option>
+          <option value="Dark">Dark</option>
+          <option value="Steel">Steel</option>
+          <option value="Dragon">Dragon</option>
+          <option value="Fairy">Fairy</option>
+          <option value="Normal">Normal</option>
+          <option value="Other">Other</option>
+        </select>
         <br>
         <br>
         <p>Pokemon Image:</p><input type="file" name="pokemonImage" @change="fileChanged">
@@ -23,16 +43,21 @@
         <button @click="addPokemon">Upload</button>
   </div>
   <PokemonList/>
-  
 </div>
+
+<Login v-else />
 </template>
 
 
 
 <script>
+import Login from "../components/Login.vue"
 import axios from 'axios';
 export default {
   name: 'Home',
+  components: {
+    Login
+  },
   data() {
     return {
       teams: [],
@@ -53,10 +78,19 @@ export default {
       show: 'all',
     }
   },
-  created() {
+  async created() {
+    try {
+      let response = await axios.get('/api/users');
+      this.$root.$data.user = response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
     this.getPokemons();
   },
   computed: {
+    user() {
+      return this.$root.$data.user;
+    },
     madePokemons() {
       return this.pokemons;
     },
@@ -71,15 +105,15 @@ export default {
         const formData = new FormData();
         formData.append('photo', this.file, this.file.name)
         let r1 = await axios.post('/api/photos', formData);
-        let r2 = await axios.post(`/api/pokemons`, {
+        await axios.post(`/api/pokemons`, {
           id: this.pokemonID,
           name: this.pokemonName,
           type: this.pokemonType,
           image: r1.data.path,
           move1: this.pokemonMove1,
           move2: this.pokemonMove2,
+          user: this.$root.$data.user._id,
         });
-        this.addPokemon = r2.data;
 
         this.pokemonID = 0;
         this.pokemonName = "";
@@ -87,15 +121,6 @@ export default {
         this.pokemonImage = "";
         this.pokemonMove1 = "";
         this.pokemonMove2 = "";
-        this.getPokemons();
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    async getPokemons() {
-      try {
-        const response = await axios.get(`/api/pokemons`);
-        this.pokemons = response.data;
       } catch (error) {
         console.log(error);
       }
@@ -103,7 +128,6 @@ export default {
     async deletePokemon(pokemon) {
       try {
         await axios.delete(`/api/teams/${this.team._id}/pokemons/${pokemon._id}`);
-        this.getPokemons();
       } catch (error) {
         console.log(error);
       }

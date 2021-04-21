@@ -6,6 +6,7 @@ const multer = require('multer');
 const app = express();
 
 // parse application/x-www-form-urlencoded
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: false
 }));
@@ -27,6 +28,25 @@ mongoose.connect('mongodb://localhost:27017/todo', {
     useUnifiedTopology: true
 });
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: [
+    'secretValue'
+  ],
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+const users = require("./users.js");
+app.use("/api/users", users.routes);
+
+const User = users.model;
+const validUser = users.valid;
 
 // Schema for pokemons
 const pokemonSchema = new mongoose.Schema({
@@ -36,6 +56,10 @@ const pokemonSchema = new mongoose.Schema({
     image: String,
     move1: String,
     move2: String,
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+    },
 });
 
 // Model for pokemons
@@ -47,7 +71,11 @@ const teamSchema = new mongoose.Schema({
     color: String,
     specialty: String,
     victory: String,
-    pokemons: [mongoose.Schema.ObjectId]
+    pokemons: [mongoose.Schema.ObjectId],
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+    },
 });
   
 // Create a model for teams
@@ -62,6 +90,7 @@ app.post('/api/teams', async (req, res) => {
         specialty: req.body.specialty,
         victory: req.body.victory,
         pokemons: req.body.pokemons,
+        user: req.body.user,
     });
     try {
         await team.save();
@@ -75,12 +104,12 @@ app.post('/api/teams', async (req, res) => {
 // Get a list of all teams
 app.get('/api/teams', async (req, res) => {
     try {
-      let teams = await Team.find().lean();
+      let teams = await Team.find().populate('user').lean();
       for(let i = 0; i < teams.length; i++) {
         let team = teams[i];
         let newPokemons = [];
         for(let j = 0; j < team.pokemons.length; j++) {
-            let testPokemon = await Pokemon.findOne({_id:team.pokemons[j]}).lean();
+            let testPokemon = await Pokemon.findOne({_id:team.pokemons[j]}).populate('user').lean();
             newPokemons.push(testPokemon);
         } 
         team.pokemons = newPokemons;
@@ -95,7 +124,7 @@ app.get('/api/teams', async (req, res) => {
 // Get a list of all pokemons
 app.get('/api/pokemons', async (req, res) => {
     try {
-      let pokemons = await Pokemon.find();
+      let pokemons = await Pokemon.find().populate('user');
       res.send(pokemons);
     } catch (error) {
       console.log(error);
@@ -112,6 +141,7 @@ app.post('/api/pokemons', async (req, res) => {
         image: req.body.image,
         move1: req.body.move1,
         move2: req.body.move2,
+        user: req.body.user,
     });
     try {
         await pokemon.save();
@@ -181,6 +211,7 @@ app.put('/api/teams/:teamID/pokemons/:pokemonID', async (req, res) => {
         pokemon.image = req.body.image;
         pokemon.move1 = req.body.move1;
         pokemon.move2 = req.body.move2;
+        pokemon.user = req.body.user;
         await pokemon.save();
         res.send(pokemon);
     } catch (error) {
@@ -231,4 +262,4 @@ app.post('/api/photos', upload.single('photo'), async (req, res) => {
     });
 });
 
-app.listen(3002, () => console.log('Server listening on port 3002!'));
+app.listen(3000, () => console.log('Server listening on port 3000!'));

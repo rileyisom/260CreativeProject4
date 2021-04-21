@@ -12,8 +12,9 @@
         <div class="moves" :style="{ 'background-color': getColor(pokemon.type) }">
             <h2> 1. {{pokemon.move1}}</h2>
             <h2> 2. {{pokemon.move2}}</h2>
+            <h4> Made by {{pokemon.user.username}}</h4>
         </div>
-        <div class="button">
+        <div class="button" v-if="teamMode !== 'viewTeam'">
             <button class="auto" v-if="teamMode === 'viewPokemon'" @click="deletePokemon(pokemon)">Remove</button>
             <button class="auto" v-else-if="teamMode === 'createTeam'" @click="$emit('addToTeam',pokemon)">Add to Team</button>
             <button class="auto" v-else @click="doNothing()"> </button>
@@ -80,7 +81,25 @@ export default {
                 case "water":
                   return "#6FD6FF";
                 case "electric":
-                  return "#E0E32D";
+                  return "#F0F035";
+                case "ice":
+                  return "##22cad6";
+                case "fighting":
+                  return "#e03f16";
+                case "ground":
+                  return "#f2cf5c";
+                case "psychic":
+                  return "#d61ad6";
+                case "rock":
+                  return "#7d5015";
+                case "ghost":
+                  return "#5507a3";
+                case "dark":
+                  return "#424242";
+                case "steel":
+                  return "#bababa";
+                case "fairy":
+                  return "#ff96f5";
                 case "poison":
                   return "#BB8BFF";
                 case "bug":
@@ -157,12 +176,24 @@ export default {
   font-size: 10px;
 }
 
+.user {
+  color: black;
+  border: solid;
+  border-color: black;
+  border-width: 1px;
+}
+
 .moves {
   background: #b3ffc7;
   color: black;
 }
 
 .moves h2 {
+    padding: 10px;
+    margin: 0px;
+}
+
+.moves h4 {
     padding: 10px;
     margin: 0px;
 }

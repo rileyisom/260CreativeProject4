@@ -1,5 +1,5 @@
 <template>
-<div>
+<div v-if="user">
   <div class="wrapper">
     <div class="search">
       <form class="pure-form">
@@ -10,22 +10,37 @@
   <h1>Teams</h1>
   <TeamList/>
 </div>
+
+<Login v-else />
 </template>
 
 <script>
 import TeamList from "../components/TeamList.vue"
+import Login from "../components/Login.vue"
+import axios from 'axios';
 export default {
   name: 'Home',
   components: {
-    TeamList
+    TeamList,
+    Login
   },
   data() {
     return {
       searchText: '',
     }
   },
+  async created() {
+    try {
+      let response = await axios.get('/api/users');
+      this.$root.$data.user = response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
+  },
   computed: {
-    
+    user() {
+      return this.$root.$data.user;
+    },
   },
 }
 </script>

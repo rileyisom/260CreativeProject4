@@ -6,6 +6,7 @@
           <h1>{{team.name}}</h1>
           <h2>{{team.specialty}}</h2>
           <h2>Victory: {{getVictory()}}</h2>
+          <h4>Made by {{team.user.username}}</h4>
         </div>
         <PokemonList :filteredList="team.pokemons" teamMode="viewTeam"/>
         <button class="auto" @click="deleteTeam(team)">Remove</button>
@@ -127,6 +128,11 @@ export default {
 }
 
 .info h2 {
+  font-size: 14px;
+  color: white;
+}
+
+.info h4 {
   font-size: 14px;
   color: white;
 }
